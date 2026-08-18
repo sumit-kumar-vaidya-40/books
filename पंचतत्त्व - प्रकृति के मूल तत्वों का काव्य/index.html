@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>पंचतत्त्व - प्रकृति के मूल तत्वों का काव्य</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Devanagari:wght@400;700&family=Yatra+One&family=Cinzel:wght@700&display=swap" rel="stylesheet">
+    
+<style>
+/* ==========================================================================
+   PART 1: VARIABLES, 3D SCENE & AMBIENT LIGHTING
+   ========================================================================== */
+
+:root {
+    /* --- THE LEATHER COVER (असली लेदर फील) --- */
+    --cover-base: #112a18;
+    --cover-dark: #07150a;
+    --cover-light: #1e4529;
+    --cover-spine: #051007;
+    
+    /* --- GOLD FOIL EMBOSSING (सोने की नक्काशी) --- */
+    --gold-primary: #e6c875;
+    --gold-light: #fef0a5;
+    --gold-dark: #8a6c22;
+    --gold-shadow: rgba(0, 0, 0, 0.5);
+    
+    /* --- VINTAGE AGED PAPER (पुराने पन्नों का रंग) --- */
+    --paper-base: #f4ecd8;
+    --paper-light: #fdfbf7;
+    --paper-dark: #d8c8a8;
+    --paper-edge: #c1b08c;
+    --ink-color: #2c2925;
+    
+    /* --- BOOK DIMENSIONS & PHYSICS --- */
+    --book-width: 480px;
+    --book-height: 680px;
+    --page-thickness: 1px;
+    --flip-speed: 1.4s; /* पन्ना पलटने की असली स्पीड */
+    --custom-ease: cubic-bezier(0.645, 0.045, 0.355, 1);
+    
+    /* --- SHADOWS --- */
+    --shadow-soft: rgba(0, 0, 0, 0.3);
+    --shadow-deep: rgba(0, 0, 0, 0.8);
+    --shadow-ambient: rgba(0, 0, 0, 0.5);
+}
+
+/* --- RESET & BODY --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    /* विंटेज वुडन टेबल या डार्क लाइब्रेरी जैसा बैकग्राउंड */
+    background: radial-gradient(circle at 50% 50%, #2e3b2e 0%, #060906 100%);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Noto Serif Devanagari', serif;
+    overflow: hidden;
+    color: var(--ink-color);
+    perspective: 3000px; /* बहुत गहरी 3D डेप्थ */
+}
+
+/* --- 3D SCENE & WRAPPER --- */
+.scene {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 3000px;
+    transform-style: preserve-3d;
+}
+
+.book-wrapper {
+    position: relative;
+    width: calc(var(--book-width) * 2);
+    height: var(--book-height);
+    transform-style: preserve-3d;
+    transform-origin: center center;
+    transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+    /* पूरी किताब का हल्का सा 3D रोटेशन ताकि यह टेबल पर रखी हुई लगे */
+    transform: rotateX(5deg) rotateY(-2deg); 
+}
+
+/* जब पन्ने पलटें, तो किताब का बैलेंस हल्का सा शिफ्ट हो (यथार्थवाद) */
+.book-wrapper:hover {
+    transform: rotateX(2deg) rotateY(0deg) scale(1.02);
+}
+
+.book {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: var(--book-width);
+    height: var(--book-height);
+    transform-style: preserve-3d;
+    transform-origin: left center;
+}
+
+/* --- AMBIENT BOOK SHADOW (किताब के नीचे की असली परछाई) --- */
+.book::before {
+    content: "";
+    position: absolute;
+    top: 2%;
+    left: -50%;
+    width: 100%;
+    height: 98%;
+    background: var(--shadow-deep);
+    filter: blur(40px);
+    transform: translateZ(-30px);
+    z-index: -1;
+    border-radius: 20px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.9);
+}
+
+/* ==========================================================================
+   PART 2: MATERIALS, LEATHER COVER, PAPER TEXTURES & SPINE
+   ========================================================================== */
+
+.paper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transform-origin: left center;
+    transition: transform var(--flip-speed) var(--custom-ease);
+}
+
+.face {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    transform-style: preserve-3d;
+    border-radius: 2px 6px 6px 2px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    /* असली पुराने पन्नों का रंग और टेक्सचर */
+    background-color: var(--paper-base);
+    background-image: 
+        radial-gradient(circle at center, transparent 40%, rgba(193, 176, 140, 0.3) 100%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.05);
+}
+
+.face.back {
+    transform: rotateY(180deg);
+    border-radius: 6px 2px 2px 6px;
+}
+
+/* --- THE SPINE CREASE (किताब के बीच में मुड़ने की असली परछाई) --- */
+.face.front::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; bottom: 0; width: 60px;
+    background: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 15%, rgba(255,255,255,0.2) 30%, rgba(0,0,0,0) 100%);
+    z-index: 10;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+}
+
+.face.back::before {
+    content: "";
+    position: absolute;
+    top: 0; right: 0; bottom: 0; width: 60px;
+    background: linear-gradient(to left, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.1) 15%, rgba(255,255,255,0.2) 30%, rgba(0,0,0,0) 100%);
+    z-index: 10;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+}
+
+/* --- LEATHER COVER STYLING (असली लेदर का अनुभव) --- */
+.face.is-cover {
+    background-color: var(--cover-base);
+    border: 5px solid var(--cover-spine);
+    /* लेदर बम्प्स (Bumps) और ग्रेन (Grain) */
+    background-image: 
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.6) 100%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.3'/%3E%3C/svg%3E");
+}
+
+.face.is-cover.front {
+    border-radius: 4px 15px 15px 4px;
+    box-shadow: 
+        inset 15px 0 30px rgba(0,0,0,0.8), /* डीप स्पाइन शैडो */
+        inset -5px 0 10px rgba(255,255,255,0.1), /* एज हाईलाइट */
+        8px 8px 25px var(--shadow-deep);
+}
+
+.face.is-cover.back {
+    border-radius: 15px 4px 4px 15px;
+    box-shadow: 
+        inset -15px 0 30px rgba(0,0,0,0.8),
+        inset 5px 0 10px rgba(255,255,255,0.1),
+        -8px 8px 25px var(--shadow-deep);
+}
+
+/* लेदर कवर के किनारे की स्टिचिंग (सिलाई का इफ़ेक्ट) */
+.face.is-cover::after {
+    content: "";
+    position: absolute;
+    top: 12px; bottom: 12px; left: 12px; right: 12px;
+    border: 2px dashed rgba(230, 200, 117, 0.2);
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* हार्डकवर के अंदर का हिस्सा (Endpaper) */
+.face.is-cover-inside {
+    background-color: var(--paper-dark);
+    border: 18px solid var(--cover-base);
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.9);
+    background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 3px, transparent 3px, transparent 6px);
+}
+
+.paper.flipped { transform: rotateY(-180deg); }
+
+/* ==========================================================================
+   PART 3: TYPOGRAPHY, INK BLEED, IMAGES, & UI CONTROLS
+   ========================================================================== */
+
+.page-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 60px 50px 70px 50px;
+    z-index: 2;
+    overflow: hidden;
+}
+
+/* स्पाइन के पास एक्स्ट्रा मार्जिन (ताकि टेक्स्ट मुड़े हुए हिस्से में न छुपे) */
+.face.front .page-content { padding-left: 65px; }
+.face.back .page-content { padding-right: 65px; }
+
+/* --- GOLD TEXT EFFECTS (कवर के लिए असली सोने जैसी चमक) --- */
+.title-group { text-align: center; margin-top: 130px; position: relative; z-index: 2; }
+
+.book-title { 
+    font-family: 'Yatra One', cursive; 
+    font-size: 5.5rem; 
+    color: var(--gold-primary); 
+    line-height: 1;
+    /* गोल्ड एम्बॉसिंग इफ़ेक्ट */
+    text-shadow: 
+        1px 1px 0px var(--gold-light),
+        -1px -1px 0px var(--gold-dark),
+        3px 3px 5px var(--gold-shadow),
+        0 0 20px rgba(230, 200, 117, 0.2); 
+}
+
+.book-subtitle { 
+    font-size: 1.6rem; 
+    color: var(--gold-primary); 
+    margin-top: 25px; 
+    letter-spacing: 3px; 
+    border-top: 2px solid var(--gold-dark); 
+    border-bottom: 2px solid var(--gold-dark); 
+    display: inline-block; 
+    padding: 8px 25px; 
+    text-shadow: 1px 1px 2px var(--gold-shadow);
+}
+
+.author-name { 
+    position: absolute; 
+    bottom: 70px; 
+    left: 0; 
+    width: 100%; 
+    text-align: center; 
+    color: var(--gold-primary); 
+    font-size: 1.4rem; 
+    letter-spacing: 4px; 
+    z-index: 2; 
+    text-shadow: 1px 1px 3px var(--gold-shadow);
+}
+
+/* --- POETRY TYPOGRAPHY (इंक ब्लीड और क्लासिक फोंट्स) --- */
+.poem-title { 
+    position: relative; 
+    z-index: 2; 
+    font-family: 'Yatra One', cursive; 
+    color: var(--cover-light); 
+    font-size: 2.4rem; 
+    text-align: center; 
+    margin-bottom: 35px; 
+    border-bottom: 3px solid var(--cover-light); 
+    padding-bottom: 12px; 
+    text-shadow: 0px 0px 1px rgba(0,0,0,0.2); /* Ink Bleed */
+}
+
+.poem-num { 
+    display: block; 
+    font-family: 'Noto Serif Devanagari', serif; 
+    font-size: 1.1rem; 
+    color: #6a6358; 
+    margin-bottom: -5px; 
+    letter-spacing: 2px; 
+}
+
+.stanza { 
+    position: relative; 
+    z-index: 2; 
+    font-size: 1.3rem; 
+    line-height: 1.9; 
+    margin-bottom: 28px; 
+    text-align: center; 
+    color: var(--ink-color); 
+    font-style: italic; 
+    font-weight: 700; 
+    /* स्याही कागज़ में जज़्ब होने का असली फील */
+    text-shadow: 0px 0px 1px rgba(44, 41, 37, 0.4); 
+}
+
+.separator { 
+    position: relative; 
+    z-index: 2; 
+    text-align: center; 
+    margin: 30px 0; 
+    color: var(--cover-light); 
+    font-size: 1.8rem; 
+    opacity: 0.8;
+}
+
+/* --- TOC & NAVIGATION LINKS --- */
+.toc-title { font-family: 'Yatra One', cursive; font-size: 2.8rem; color: var(--cover-light); text-align: center; margin-bottom: 40px; position: relative; z-index: 2; }
+.toc-list { list-style: none; padding: 0; position: relative; z-index: 2; }
+.toc-list li { 
+    display: flex; justify-content: space-between; font-size: 1.3rem; margin-bottom: 20px; 
+    position: relative; font-weight: bold; cursor: pointer; transition: color 0.3s ease; color: var(--ink-color); 
+}
+.toc-list li:hover { color: #8a2a2a; } /* लाल रंग का विंटेज होवर */
+.toc-list li::after { content: ""; position: absolute; bottom: 8px; left: 0; right: 0; border-bottom: 2px dotted #a89a80; z-index: 1; }
+.toc-list span { background: var(--paper-base); z-index: 2; padding: 0 8px; }
+
+/* --- ORNAMENTS & WATERMARKS --- */
+.bg-watermark {
+    position: absolute;
+    top: -5%; left: -5%; width: 110%; height: 110%;
+    object-fit: cover; opacity: 0.12; z-index: 1; pointer-events: none;
+    filter: grayscale(40%) sepia(40%) contrast(1.2);
+}
+
+.page-num { 
+    position: absolute; bottom: 30px; font-size: 1.1rem; color: #7a7060; 
+    font-weight: bold; font-family: 'Cinzel', serif; z-index: 5; 
+}
+.face.front .page-num { right: 40px; }
+.face.back .page-num { left: 40px; }
+
+/* विंटेज कॉर्नर डिज़ाइन */
+.corner { position: absolute; width: 45px; height: 45px; border: 2px solid rgba(17, 42, 24, 0.3); z-index: 5; border-radius: 3px; }
+.corner.tl { top: 20px; left: 20px; border-right: none; border-bottom: none; }
+.corner.tr { top: 20px; right: 20px; border-left: none; border-bottom: none; }
+.corner.bl { bottom: 20px; left: 20px; border-right: none; border-top: none; }
+.corner.br { bottom: 20px; right: 20px; border-left: none; border-top: none; }
+
+/* --- AUTHOR BIO SECTIONS --- */
+.author-img-wrapper { text-align: center; margin-bottom: 15px; position: relative; z-index: 2; }
+.author-profile-img {
+    width: 110px; height: 110px; border-radius: 50%; object-fit: cover;
+    border: 4px solid var(--gold-primary);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 0 10px rgba(0,0,0,0.5);
+    transition: transform 0.4s var(--custom-ease);
+}
+.author-profile-img:hover { transform: scale(1.08) rotate(2deg); }
+
+.author-name-title { font-size: 1.6rem; text-align: center; font-weight: bold; margin-bottom: 12px; color: var(--cover-light); position: relative; z-index: 2; }
+.author-real-name { font-size: 1rem; color: #6a6358; display: block; margin-top: 5px; font-weight: normal; }
+.author-details { font-size: 1.1rem; text-align: center; font-weight: bold; line-height: 1.6; position: relative; z-index: 2; color: var(--ink-color); }
+
+/* --- UI CONTROLS & LOADER --- */
+.controls { position: absolute; bottom: 30px; z-index: 1000; display: flex; gap: 20px; opacity: 0; animation: fadeIn 1s forwards 2s; }
+.btn {
+    background: linear-gradient(145deg, var(--cover-base), var(--cover-spine));
+    color: var(--gold-primary);
+    border: 2px solid var(--gold-dark);
+    padding: 12px 35px;
+    font-family: 'Yatra One', cursive;
+    font-size: 1.3rem;
+    cursor: pointer;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.8), inset 0 2px 2px rgba(255,255,255,0.1);
+    transition: all 0.3s var(--custom-ease);
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
+}
+.btn:hover { background: var(--gold-primary); color: var(--cover-dark); border-color: var(--cover-base); transform: translateY(-3px); text-shadow: none; box-shadow: 0 10px 25px rgba(0,0,0,0.9); }
+.btn:active { transform: translateY(1px); box-shadow: 0 3px 10px rgba(0,0,0,0.8); }
+
+#loader {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, #1e261e 0%, #060906 100%); z-index: 9999;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--gold-primary); font-family: 'Cinzel', serif; font-size: 2.2rem;
+    transition: opacity 0.6s ease; text-shadow: 0 0 10px rgba(230,200,117,0.3);
+}
+.spinner {
+    margin-top: 25px; width: 60px; height: 60px;
+    border: 4px solid rgba(230, 200, 117, 0.2);
+    border-top: 4px solid var(--gold-primary); border-radius: 50%;
+    animation: spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+}
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+@keyframes fadeIn { to { opacity: 1; } }
+
+#raw-source { display: none; }
+#measure-box { position: absolute; visibility: hidden; top: -9999px; left: -9999px; width: var(--book-width); height: var(--book-height); }
+
+/* ==========================================================================
+   NEW ENHANCEMENTS: UI, CANDLE MODE, GOLD REFLECTION, & ZOOM
+   ========================================================================== */
+
+/* टॉप कंट्रोल्स (Top Controls) */
+.top-controls {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    z-index: 10000;
+    display: flex;
+    gap: 15px;
+    opacity: 0;
+    animation: fadeIn 1s forwards 2s;
+}
+
+.icon-btn {
+    background: var(--cover-spine);
+    color: var(--gold-primary);
+    border: 1px solid var(--gold-dark);
+    font-size: 1.5rem;
+    padding: 10px 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    transition: all 0.3s ease;
+}
+
+.icon-btn:hover {
+    background: var(--gold-primary);
+    color: var(--cover-dark);
+    transform: scale(1.1);
+}
+
+/* कैंडल-लाइट मोड (Night Reading) */
+body.candle-mode::after {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, rgba(255, 140, 0, 0.1) 0%, rgba(10, 5, 0, 0.7) 100%);
+    pointer-events: none;
+    z-index: 9998;
+    animation: flicker 3s infinite alternate ease-in-out;
+}
+
+@keyframes flicker {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.85; }
+}
+
+/* ज़ूम-इन (Double Tap Zoom) */
+.book-wrapper.zoomed {
+    transform: rotateX(0deg) rotateY(0deg) scale(1.5) !important;
+    z-index: 5000;
+}
+
+/* डायनेमिक गोल्ड रिफ्लेक्शन (Dynamic Gold Reflection) - इसे हटा दें */
+.book-title {
+    background: linear-gradient(var(--mouse-deg, 45deg), var(--gold-light), var(--gold-dark), var(--gold-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 3px 3px 5px var(--gold-shadow); 
+}
+
+/* पेज कर्लिंग इफ़ेक्ट (CSS Illusion for bend) */
+.paper {
+    transition: transform var(--flip-speed) var(--custom-ease), border-radius 0.3s ease;
+}
+.paper:active {
+    /* पलटते समय पन्ने का कोना हल्का सा मुड़ा हुआ (Skew/Radius) दिखाने की ट्रिक */
+    border-radius: 5px 30px 30px 5px;
+}
+
+/* ==========================================================================
+   INNER COVER PAGE (RAD VINTAGE CSS)
+   ========================================================================== */
+.inner-cover-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 40px 20px;
+    text-align: center;
+    position: relative;
+}
+
+/* विंटेज डबल बॉर्डर और हल्का पेपर इफ़ेक्ट */
+.vintage-border {
+    border: 2px solid var(--cover-light);
+    outline: 1px solid var(--cover-light);
+    outline-offset: -10px;
+    background: radial-gradient(circle, transparent 70%, rgba(41, 91, 49, 0.05) 100%);
+}
+
+/* सजावटी डिज़ाइन */
+.inner-ornament {
+    font-size: 2.5rem;
+    color: var(--cover-light);
+    margin-bottom: 20px;
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.1);
+}
+
+.inner-title {
+    font-family: 'Yatra One', cursive;
+    font-size: 4rem;
+    color: var(--ink-color);
+    letter-spacing: 5px;
+    margin-bottom: 5px;
+    text-shadow: 1px 1px 2px rgba(44, 41, 37, 0.3);
+}
+
+.inner-subtitle {
+    font-size: 1.4rem;
+    color: #6a6358;
+    margin-bottom: 40px;
+    font-style: italic;
+}
+
+/* बीच की विभाजक रेखा */
+.inner-divider {
+    width: 80px;
+    height: 3px;
+    background-color: var(--cover-light);
+    margin: 20px auto 40px;
+    border-radius: 2px;
+}
+
+.inner-author {
+    font-size: 1.6rem;
+    color: var(--ink-color);
+    font-weight: bold;
+}
+
+/* असली किताब जैसी मुहर (Vintage Stamp) */
+.seal {
+    position: absolute;
+    bottom: 40px;
+    width: 90px;
+    height: 90px;
+    border: 3px double var(--cover-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: var(--cover-light);
+    font-weight: bold;
+    text-align: center;
+    line-height: 1.2;
+    transform: rotate(-15deg); /* स्टैम्प को थोड़ा तिरछा किया गया है */
+    opacity: 0.8;
+    box-shadow: inset 0 0 5px rgba(41, 91, 49, 0.2);
+}
+
+//* ==========================================================================
+   COOL AUTHOR BIO SECTION (COMPACT DESIGN TO FIT PAGE)
+   ========================================================================== */
+.bio-card {
+    background: linear-gradient(to bottom, rgba(30, 69, 41, 0.05), rgba(30, 69, 41, 0.12));
+    border-top: 2px solid var(--gold-dark);
+    border-bottom: 2px solid var(--gold-dark);
+    padding: 12px 15px; /* पैडिंग कम की गई */
+    border-radius: 12px;
+    margin-top: 5px; /* मार्जिन कम किया गया */
+    box-shadow: inset 0 0 25px rgba(0,0,0,0.03);
+    position: relative;
+    z-index: 2;
+}
+
+.bio-avatar-container {
+    position: relative;
+    width: 85px; /* तस्वीर का आकार छोटा किया गया */
+    height: 85px;
+    margin: 0 auto 10px auto;
+}
+
+.bio-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--gold-primary);
+    box-shadow: 0 5px 10px rgba(0,0,0,0.3);
+    transition: all 0.5s var(--custom-ease);
+    filter: grayscale(30%) sepia(20%);
+    position: relative;
+    z-index: 2;
+}
+
+/* घूमती हुई सुनहरी रिंग */
+.bio-avatar-container::before {
+    content: '';
+    position: absolute;
+    top: -6px; left: -6px; right: -6px; bottom: -6px;
+    border: 2px dashed var(--gold-dark);
+    border-radius: 50%;
+    animation: rotateDash 15s linear infinite;
+    opacity: 0.6;
+}
+
+.bio-avatar-container:hover .bio-avatar {
+    transform: scale(1.1) rotate(5deg);
+    filter: grayscale(0%) sepia(0%);
+    box-shadow: 0 10px 20px rgba(230, 200, 117, 0.4);
+}
+
+@keyframes rotateDash {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.bio-name {
+    font-family: 'Yatra One', cursive;
+    font-size: 1.5rem; /* फ़ॉन्ट छोटा किया गया */
+    color: var(--cover-light);
+    text-align: center;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    margin-bottom: 0;
+}
+
+.bio-realname {
+    font-family: 'Noto Serif Devanagari', serif;
+    font-size: 0.85rem;
+    color: #8a6c22;
+    text-align: center;
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+}
+
+.bio-text {
+    font-size: 0.95rem;
+    line-height: 1.5; /* लाइनों के बीच की दूरी कम की गई */
+    text-align: justify;
+    color: var(--ink-color);
+    margin-bottom: 12px;
+    padding: 0 5px;
+    font-style: normal;
+}
+
+.bio-info-grid {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 5px 10px; /* ग्रिड की दूरी कम की गई */
+    font-size: 0.85rem;
+    color: var(--ink-color);
+    background: rgba(255, 255, 255, 0.5);
+    padding: 10px;
+    border-radius: 8px;
+    border-left: 4px solid var(--gold-primary);
+    text-align: left;
+    line-height: 1.3;
+}
+
+.bio-info-grid strong {
+    color: var(--cover-light);
+    white-space: nowrap;
+}
+
+</style>
+</head>
+<body>
+
+    <!-- पन्ना पलटने की ध्वनि -->
+    <audio id="flip-sound" src="flip-page.mp3" preload="auto"></audio>
+
+    <!-- लोडिंग स्क्रीन -->
+    <div id="loader">
+        <div>पंचतत्त्व काव्य-संग्रह सज्जित हो रहा है...</div>
+        <div class="spinner"></div>
+    </div>
+
+    <!-- 3D Scene -->
+    <div class="scene">
+        <div class="book-wrapper" id="book-wrapper">
+            <div class="book" id="book">
+                <!-- JS द्वारा पृष्ठ यहाँ जोड़े जाएँगे -->
+            </div>
+        </div>
+    </div>
+
+    <!-- शीर्ष नियंत्रण (Top Controls) -->
+    <div class="top-controls">
+        <button class="icon-btn" onclick="toggleZoom()" title="दृश्य आवर्धन (Zoom)">🔍</button>
+        <button class="icon-btn" onclick="toggleCandleMode()" title="दीप-प्रकाश अवस्था (Candle Mode)">🕯️</button>
+        <button class="icon-btn" onclick="toggleFullscreen()" title="पूर्ण-पटल दृश्य (Fullscreen)">🔲</button>
+    </div>
+
+    <!-- पृष्ठ नेविगेशन -->
+    <div class="controls">
+        <button class="btn" onclick="prevPage()">&#10094; पूर्व पृष्ठ</button>
+        <button class="btn" onclick="nextPage()">आगामी पृष्ठ &#10095;</button>
+    </div>
+
+    <!-- ==========================================================================
+         मूल सामग्री (RAW CONTENT) - जो पुस्तक के पन्नों में परिवर्तित होगी
+         ========================================================================== -->
+    <div id="raw-source">
+        
+        <!-- मुखपृष्ठ (COVER PAGE) -->
+        <div data-type="cover">
+            <div class="title-group">
+                <h1 class="book-title">पंचतत्त्व</h1>
+                <div class="book-subtitle">प्रकृति के मूल तत्वों का काव्य</div>
+            </div>
+            <div class="author-name">कवि: सुमित कुमार गुप्त</div>
+        </div>
+
+        <!-- आंतरिक मुखपृष्ठ (INNER COVER PAGE) -->
+        <div data-type="inner-cover">
+            <div class="inner-cover-wrapper vintage-border">
+                <div class="inner-ornament">꧁ 🌿 ꧂</div>
+                <h1 class="inner-title">पंचतत्त्व</h1>
+                <h3 class="inner-subtitle">प्रकृति के मूल तत्वों का काव्य</h3>
+                <div class="inner-divider"></div>
+                <h4 class="inner-author">सुमित कुमार गुप्त</h4>
+                <div class="seal">प्रथम<br>संस्करण</div>
+            </div>
+        </div>
+
+        <!-- अनुक्रमणिका (INDEX PAGE) -->
+        <div data-type="index">
+            <h2 class="toc-title">अनुक्रमणिका</h2>
+            <ul class="toc-list">
+                <li data-target="preface"><span>प्रस्तावना</span> <span class="page-num-ref">...</span></li>
+                <li data-target="author-bio"><span>लेखक परिचय</span> <span class="page-num-ref">...</span></li>
+                <li data-target="poem1"><span>१. वायु</span> <span class="page-num-ref">...</span></li>
+                <li data-target="poem2"><span>२. जल</span> <span class="page-num-ref">...</span></li>
+                <li data-target="poem3"><span>३. मृदा</span> <span class="page-num-ref">...</span></li>
+                <li data-target="poem4"><span>४. सूर्य</span> <span class="page-num-ref">...</span></li>
+                <li data-target="poem5"><span>५. वर्षा</span> <span class="page-num-ref">...</span></li>
+            </ul>
+        </div>
+
+        <!-- मुख्य सामग्री (MAIN CONTENT) -->
+        <div data-type="content">
+            
+            <!-- प्रस्तावना -->
+            <div class="poem-wrapper" data-toc="preface">
+                <h2 class="poem-title">प्रस्तावना</h2>
+                <img class="bg-watermark" src="https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&q=80&w=800" alt="प्रस्तावना पृष्ठभूमि">
+                <div class="stanza" style="font-size: 1.15rem; font-style: normal; text-align: justify; font-weight: bold;">
+                    मानव देह एवं यह अनंत ब्रह्मांड, दोनों ही पंचतत्त्वों—जल, पावक, गगन, समीर और धरा—से निर्मित हैं। 'पंचतत्त्व' काव्य-संग्रह इन्हीं मूलभूत तत्वों के प्रति मेरी एक विनम्र श्रद्धांजलि है। 
+                </div>
+                <div class="stanza" style="font-size: 1.15rem; font-style: normal; text-align: justify; font-weight: bold;">
+                    आधुनिकता की अंधी दौड़ में हम बहुधा उस आदि-प्रकृति से विमुख हो जाते हैं, जो हमारा वास्तविक उद्गम है। मुझे पूर्ण विश्वास है कि ये कविताएँ आपके हृदय में प्रकृति के प्रति अगाध प्रेम एवं कृतज्ञता का भाव पुनः जाग्रत करेंगी।
+                </div>
+                <div class="separator">&#10086;</div>
+            </div>
+
+<!-- लेखक परिचय (Compact Cool Design) -->
+            <div class="poem-wrapper" data-toc="author-bio">
+                <h2 class="poem-title" style="margin-bottom: 5px; font-size: 1.8rem; padding-bottom: 5px;">लेखक परिचय</h2>
+                <img class="bg-watermark" src="https://images.unsplash.com/photo-1455390582262-044cdead27d8?auto=format&fit=crop&q=80&w=800" alt="लेखक पृष्ठभूमि">
+                
+                <div class="bio-card">
+                    <!-- एनिमेटेड अवतार -->
+                    <div class="bio-avatar-container">
+                        <img src="./sumit.png" alt="सुमित कुमार गुप्त" class="bio-avatar">
+                    </div>
+
+                    <!-- नाम -->
+                    <div class="bio-name">सुमित कुमार गुप्त</div>
+                    <span class="bio-realname">(मूल नाम: सुमित दासगुप्त)</span>
+
+                    <!-- परिचय -->
+                    <div class="bio-text">
+                        मात्र १२ वर्ष की अल्प आयु में प्रकृति के प्रति ऐसा प्रगाढ़ अनुराग एवं शब्दों पर ऐसी अद्भुत पकड़ विरले ही दृष्टिगोचर होती है। सुमित की कविताएँ न केवल उनके निर्मल मन का दर्पण हैं, अपितु वर्तमान पीढ़ी के लिए पर्यावरण संरक्षण का एक अत्यंत सुंदर एवं परिपक्व संदेश भी हैं।
+                    </div>
+
+                    <!-- संपर्क ग्रिड -->
+                    <div class="bio-info-grid">
+                        <strong>आयु:</strong> <span>१२ वर्ष</span>
+                        <strong>विद्यापीठ:</strong> <span>दिल्ली पब्लिक स्कूल, शंकरपुर, हज़ारीबाग - ८२५ ३०१</span>
+                        <strong>निवास:</strong> <span>ग्राम- परसी, प्रखंड- ईचाक, हज़ारीबाग, झारखंड - ८२५ ४०२</span>
+                        <strong>ई-मेल:</strong> <span>dasgupta.1234@outlook.com</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- कविता १: वायु -->
+            <div class="poem-wrapper" data-toc="poem1">
+                <h2 class="poem-title"><span class="poem-num">प्रथम तत्त्व</span>वायु</h2>
+                <img class="bg-watermark" src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcQImeclhMcwLfR8x_p6RtlNnrorhZlamBW7uvumYty7hjHmAbgNNAHogI8aPcuF" alt="वायु">
+                <div class="stanza">
+                    अदृश्य होकर भी उपस्थित,<br>
+                    जो श्वासों का आधार है।<br>
+                    जिसके प्रवाह से स्पंदित,<br>
+                    यह सम्पूर्ण संसार है।
+                </div>
+                <div class="stanza">
+                    शीतल समीर जब बहती है,<br>
+                    नव ऊर्जा का संचार करे।<br>
+                    क्रुद्ध प्रभंजन बन जाए तो,<br>
+                    पल में हाहाकार करे।
+                </div>
+                <div class="separator">&#10086;</div>
+            </div>
+
+            <!-- कविता २: जल -->
+            <div class="poem-wrapper" data-toc="poem2">
+                <h2 class="poem-title"><span class="poem-num">द्वितीय तत्त्व</span>जल</h2>
+                <img class="bg-watermark" src="https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcQqOoN2bvd1tc5QulofirdsyuiG6QK4hpqlJGYi3B0xQVndwkN7tLT-zoPxQkuQ" alt="जल">
+                <div class="stanza">
+                    जीवन का यह मूल स्रोत है,<br>
+                    नीर बिना सब सूना है।<br>
+                    एक बूँद में छिपी चेतना,<br>
+                    जल से जग यह दूना है।
+                </div>
+                <div class="stanza">
+                    सरिता बनकर यह इठलाता,<br>
+                    सागर में यह गंभीर है।<br>
+                    प्यास बुझाता हर प्राणी की,<br>
+                    यह पावन, यह निर्मल नीर है।
+                </div>
+                <div class="separator">&#10086;</div>
+            </div>
+
+            <!-- कविता ३: मृदा -->
+            <div class="poem-wrapper" data-toc="poem3">
+                <h2 class="poem-title"><span class="poem-num">तृतीय तत्त्व</span>मृदा</h2>
+                <img class="bg-watermark" src="https://th.bing.com/th/id/OIP.FqSIxt26fCHsuVgIRmrx5AHaE7?w=304&h=202&c=7&r=0&o=7&pid=1.7&rm=3" alt="मृदा">
+                <div class="stanza">
+                    इसी मृदा से देह बनी है,<br>
+                    इसी धरा में मिल जाना।<br>
+                    बीज वपन से लेकर तरु तक,<br>
+                    माटी का है ताना-बाना।
+                </div>
+                <div class="stanza">
+                    रत्नगर्भा यह मातृतुल्य है,<br>
+                    हर लेती सब पीड़ाएँ।<br>
+                    अपनी छाती चीर लुटाती,<br>
+                    हम पर सस्य संपदाएँ।
+                </div>
+                <div class="separator">&#10086;</div>
+            </div>
+
+            <!-- कविता ४: सूर्य -->
+            <div class="poem-wrapper" data-toc="poem4">
+                <h2 class="poem-title"><span class="poem-num">चतुर्थ तत्त्व</span>सूर्य</h2>
+                <img class="bg-watermark" src="https://encrypted-tbn1.gstatic.com/images?q=tbn:ANd9GcR9k0neVJuXDqPVc8PQEGYh7MqEHrvo382VbbvoGdKeuqIXe_iAyAImJgcjEgR0" alt="सूर्य">
+                <div class="stanza">
+                    तम का नाश करने को रथ पर,<br>
+                    जब दिनकर हैं आते।<br>
+                    कनक रश्मियों के चुंबन से,<br>
+                    तरु-पल्लव मुस्काते।
+                </div>
+                <div class="stanza">
+                    अंधकार का भेदन कर जो,<br>
+                    नव प्रकाश फैलाता है।<br>
+                    ऊर्जा का वह आदि स्रोत ही,<br>
+                    जग में सूर्य कहाता है।
+                </div>
+                <div class="separator">&#10086;</div>
+            </div>
+
+            <!-- कविता ५: वर्षा -->
+            <div class="poem-wrapper" data-toc="poem5">
+                <h2 class="poem-title"><span class="poem-num">पंचम तत्त्व</span>वर्षा</h2>
+                <img class="bg-watermark" src="https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcRPdkiBHoub8UOMh18LzmlUifhMZxaZuRyMH5lqC9DOAs-ZywmbquZym2byqEjx" alt="वर्षा">
+                <div class="stanza">
+                    गगन-भेदी गर्जना करते,<br>
+                    जब श्यामल मेघ घुमड़ते हैं।<br>
+                    तृषित धरा की प्यास बुझाने,<br>
+                    अंबर से जल झरते हैं।
+                </div>
+                <div class="stanza">
+                    सोंधी-सोंधी गंध उठ रही,<br>
+                    प्रफुल्लित अब हर क्यारी है।<br>
+                    नव-जीवन का शंखनाद यह,<br>
+                    पावस ऋतु बलिहारी है।
+                </div>
+                <div class="separator">&#10086;</div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- मापक (Measure Box) - अदृश्य -->
+    <div id="measure-box"><div class="face front"><div class="page-content" id="measure-content"></div></div></div>
+
+    <!-- ==========================================================================
+         जावास्क्रिप्ट (JAVASCRIPT ENGINE) 
+         ========================================================================== -->
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const bookEl = document.getElementById('book');
+            const measureContent = document.getElementById('measure-content');
+            
+            let faces = []; 
+            let currentLocation = 0;
+            let totalPapers = 0;
+            let chapterPageMap = {};
+
+            // --- ध्वनि (Sound) ---
+            function playFlipSound() {
+                const flipSound = document.getElementById('flip-sound');
+                if (flipSound) {
+                    flipSound.currentTime = 0;
+                    flipSound.play().catch(err => console.log("Audio play prevented:", err));
+                }
+            }
+
+            // --- पन्ने बनाना (Create Face) ---
+            function createFace(isCover, isBack, isInsideCover) {
+                const face = document.createElement('div');
+                face.className = `face ${isBack ? 'back' : 'front'}`;
+                
+                if (isCover) face.classList.add('is-cover');
+                if (isInsideCover) face.classList.add('is-cover-inside');
+                
+                const contentWrapper = document.createElement('div');
+                contentWrapper.className = 'page-content';
+                
+                if (!isCover && !isInsideCover) {
+                    ['tl', 'tr', 'bl', 'br'].forEach(pos => {
+                        let c = document.createElement('div');
+                        c.className = `corner ${pos}`;
+                        contentWrapper.appendChild(c);
+                    });
+                }
+                
+                face.appendChild(contentWrapper);
+                return { element: face, content: contentWrapper };
+            }
+
+            // --- पुस्तक का निर्माण (Build Book) ---
+            function buildBook() {
+                const rawSource = document.getElementById('raw-source');
+                
+                // १. मुखपृष्ठ (Cover Page)
+                let coverFace = createFace(true, false, false);
+                coverFace.content.innerHTML = rawSource.querySelector('[data-type="cover"]').innerHTML;
+                faces.push(coverFace.element);
+                
+                // २. आवरण के भीतर (Inside Cover Left)
+                faces.push(createFace(false, true, true).element);
+                
+                // ३. आंतरिक मुखपृष्ठ (Title Page Right)
+                let innerCoverFace = createFace(false, false, false);
+                let innerCoverData = rawSource.querySelector('[data-type="inner-cover"]');
+                if (innerCoverData) {
+                    innerCoverFace.content.innerHTML = innerCoverData.innerHTML;
+                }
+                faces.push(innerCoverFace.element);
+
+                // ४. अनुक्रमणिका (Index Page Left)
+                let indexFace = createFace(false, true, false);
+                indexFace.content.innerHTML = rawSource.querySelector('[data-type="index"]').innerHTML;
+                faces.push(indexFace.element);
+
+                // ५. सामग्री का स्वतः-पृष्ठांकन (Auto-pagination)
+                let contentBlocks = Array.from(rawSource.querySelector('[data-type="content"]').children);
+                let currentFaceObj = createFace(false, faces.length % 2 !== 0, false);
+                let pageNumber = 1; 
+
+                for (let i = 0; i < contentBlocks.length; i++) {
+                    let block = contentBlocks[i].cloneNode(true);
+                    
+                    if (block.classList && block.classList.contains('poem-wrapper')) {
+                        if (currentFaceObj.content.innerHTML.trim() !== '') {
+                            addPageNumber(currentFaceObj.element, pageNumber++);
+                            faces.push(currentFaceObj.element);
+                            currentFaceObj = createFace(false, faces.length % 2 !== 0, false);
+                        }
+                    }
+
+                    if(block.hasAttribute('data-toc')) {
+                        chapterPageMap[block.getAttribute('data-toc')] = pageNumber;
+                    }
+
+                    measureContent.innerHTML = currentFaceObj.content.innerHTML;
+                    measureContent.appendChild(block);
+                    
+                    if (measureContent.scrollHeight > measureContent.clientHeight) {
+                        addPageNumber(currentFaceObj.element, pageNumber++);
+                        faces.push(currentFaceObj.element);
+                        
+                        currentFaceObj = createFace(false, faces.length % 2 !== 0, false);
+                        currentFaceObj.content.appendChild(block);
+                    } else {
+                        currentFaceObj.content.appendChild(block);
+                    }
+                }
+                
+                addPageNumber(currentFaceObj.element, pageNumber++);
+                faces.push(currentFaceObj.element);
+                
+                if (faces.length % 2 !== 0) {
+                    faces.push(createFace(false, true, false).element);
+                }
+
+                // ६. पश्च आवरण (Back Cover)
+                faces.push(createFace(false, false, true).element);
+                faces.push(createFace(true, true, false).element);
+
+                // ७. अनुक्रमणिका कड़ियाँ (Index Links)
+                let indexItems = indexFace.element.querySelectorAll('li[data-target]');
+                indexItems.forEach(li => {
+                    let targetKey = li.getAttribute('data-target');
+                    if (chapterPageMap[targetKey]) {
+                        let span = li.querySelector('.page-num-ref');
+                        if (span) span.innerText = `पृष्ठ ${convertToHindiNumerals(chapterPageMap[targetKey])}`;
+                        li.addEventListener('click', () => jumpToPage(chapterPageMap[targetKey]));
+                    }
+                });
+
+                // ८. पुस्तक संयोजन (Assemble Book)
+                totalPapers = faces.length / 2;
+                for (let i = 0; i < totalPapers; i++) {
+                    let paper = document.createElement('div');
+                    paper.className = 'paper';
+                    paper.id = `paper-${i}`;
+                    paper.appendChild(faces[i * 2]);
+                    paper.appendChild(faces[i * 2 + 1]);
+                    bookEl.appendChild(paper);
+                }
+
+                updateZIndexes();
+                
+                setTimeout(() => {
+                    document.getElementById('loader').style.opacity = '0';
+                    setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+                }, 1000);
+            }
+
+            // --- हिंदी पृष्ठ संख्या ---
+            function addPageNumber(faceEl, num) {
+                let div = document.createElement('div');
+                div.className = 'page-num';
+                div.innerText = convertToHindiNumerals(num);
+                faceEl.appendChild(div);
+            }
+
+            function convertToHindiNumerals(num) {
+                const hindiDigits = ['०','१','२','३','४','५','६','७','८','९'];
+                return num.toString().split('').map(d => hindiDigits[d]).join('');
+            }
+
+            // --- UI फ़ंक्शन्स ---
+            window.toggleFullscreen = function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen().catch(err => console.log(err));
+                } else if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            };
+
+            window.toggleCandleMode = function() {
+                document.body.classList.toggle('candle-mode');
+            };
+
+            window.toggleZoom = function() {
+                document.getElementById('book-wrapper').classList.toggle('zoomed');
+            };
+
+            bookEl.addEventListener('dblclick', window.toggleZoom);
+
+            // --- बुकमार्क (Save Progress) ---
+            function saveBookmark() {
+                localStorage.setItem('sumitBookPage', currentLocation);
+            }
+
+            // --- नेविगेशन (Navigation) ---
+            window.nextPage = function() {
+                if (currentLocation < totalPapers) {
+                    document.getElementById(`paper-${currentLocation}`).classList.add('flipped');
+                    currentLocation++;
+                    updateZIndexes();
+                    playFlipSound();
+                    saveBookmark();
+                }
+            }
+
+            window.prevPage = function() {
+                if (currentLocation > 0) {
+                    currentLocation--;
+                    document.getElementById(`paper-${currentLocation}`).classList.remove('flipped');
+                    updateZIndexes();
+                    playFlipSound();
+                    saveBookmark();
+                }
+            }
+
+            // --- अनुक्रमणिका से स्मूथ जंप (Smooth Jump) ---
+            window.jumpToPage = function(logicalPageNum) {
+                let faceIndex = logicalPageNum + 3; 
+                let targetPaperIndex = Math.floor(faceIndex / 2);
+                let targetLocation = (faceIndex % 2 !== 0) ? targetPaperIndex + 1 : targetPaperIndex;
+                
+                if (currentLocation === targetLocation) return;
+                
+                let isForward = targetLocation > currentLocation;
+                
+                document.querySelectorAll('.paper').forEach((paper, index) => {
+                    let isTopMovingPage = isForward ? (index === targetLocation - 1) : (index === targetLocation);
+                    let isIntermediate = (isForward && index >= currentLocation && index < targetLocation) || 
+                                         (!isForward && index >= targetLocation && index < currentLocation);
+
+                    // बीच के पन्नों का ट्रांज़िशन (Animation) बंद कर दें ताकि ग्लिच न हो
+                    if (!isTopMovingPage && isIntermediate) {
+                        paper.style.transition = 'none';
+                    } else {
+                        paper.style.transition = ''; 
+                    }
+
+                    if (index < targetLocation) {
+                        paper.classList.add('flipped');
+                    } else {
+                        paper.classList.remove('flipped');
+                    }
+                });
+                
+                currentLocation = targetLocation;
+                updateZIndexes();
+                playFlipSound();
+                saveBookmark();
+                
+                // पन्ने सेट होने के 50ms बाद सबका एनीमेशन वापस चालू कर दें
+                setTimeout(() => {
+                    document.querySelectorAll('.paper').forEach(paper => {
+                        paper.style.transition = '';
+                    });
+                }, 50);
+            }
+
+            // --- 3D गहराई (Z-Index) ---
+            function updateZIndexes() {
+                document.querySelectorAll('.paper').forEach((paper, index) => {
+                    if (index < currentLocation) paper.style.zIndex = index;
+                    else paper.style.zIndex = totalPapers - index;
+                });
+            }
+
+            // --- रिस्पॉन्सिवनेस (Responsiveness) ---
+            function handleResize() {
+                const wrapper = document.getElementById('book-wrapper');
+                const targetWidth = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--book-width')) * 2;
+                const targetHeight = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--book-height'));
+                
+                const scaleX = (window.innerWidth - 40) / targetWidth;
+                const scaleY = (window.innerHeight - 100) / targetHeight;
+                let finalScale = Math.min(scaleX, scaleY, 1);
+                wrapper.style.transform = `rotateX(5deg) rotateY(-2deg) scale(${finalScale})`;
+            }
+
+            window.addEventListener('resize', handleResize);
+
+            // --- इनिशियलाइज़ेशन (Initialize Book) ---
+            setTimeout(() => {
+                buildBook();
+                handleResize();
+                
+                // बुकमार्क लोड करें
+                let savedPage = localStorage.getItem('sumitBookPage');
+                if (savedPage !== null && parseInt(savedPage) > 0) {
+                    setTimeout(() => {
+                        // पुराने जंप लॉजिक की जगह अब हमारा नया 'Glitch-free' लॉजिक इस्तेमाल हो रहा है
+                        currentLocation = parseInt(savedPage);
+                        document.querySelectorAll('.paper').forEach((paper, index) => {
+                            paper.style.transition = 'none'; // लोड होते समय बिना एनीमेशन के सेट करें
+                            if (index < currentLocation) paper.classList.add('flipped');
+                            else paper.classList.remove('flipped');
+                        });
+                        updateZIndexes();
+                        
+                        // 50ms बाद एनीमेशन चालू करें
+                        setTimeout(() => {
+                            document.querySelectorAll('.paper').forEach(paper => {
+                                paper.style.transition = '';
+                            });
+                        }, 50);
+                    }, 1500);
+                }
+            }, 100);
+        });
+    </script>
+</body>
+</html>
